@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-privaro",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "n8n community node for Privaro \u2014 the AI privacy governance layer. Detect, tokenize, safely relay chat completions, and detokenize PII before it reaches any LLM.",
   "keywords": [
     "n8n-community-node-package",
@@ -24,8 +24,8 @@
   "scripts": {
     "build": "tsc && shx cp nodes/Privaro/*.png dist/nodes/Privaro/",
     "dev": "tsc --watch",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix"
+    "lint": "eslint nodes credentials --ext .ts",
+    "lintfix": "eslint nodes credentials --ext .ts --fix"
   },
   "files": [
     "dist"
