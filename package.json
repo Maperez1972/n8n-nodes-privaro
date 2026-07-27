@@ -22,7 +22,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "tsc && cp nodes/Privaro/*.svg dist/nodes/Privaro/",
+    "build": "tsc && shx cp nodes/Privaro/*.svg dist/nodes/Privaro/",
     "dev": "tsc --watch",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix"
@@ -43,6 +43,7 @@
     "@typescript-eslint/parser": "^7.0.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.0",
     "n8n-workflow": "^1.0.0",
+    "shx": "^0.4.0",
     "typescript": "^5.4.0"
   },
   "peerDependencies": {
