@@ -21,7 +21,7 @@ export class Privaro implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Privaro',
 		name: 'privaro',
-		icon: 'file:privaro.svg',
+		icon: 'file:privaro.png',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
