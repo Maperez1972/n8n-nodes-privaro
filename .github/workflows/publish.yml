@@ -1,0 +1,85 @@
+name: Publish to npm
+
+# n8n requires community nodes submitted for verification to be published
+# via GitHub Actions with a provenance statement (mandatory since 2026-05-01)
+# -- n8n will not accept verified nodes published from a local machine.
+#
+# Uses npm Trusted Publishing (OIDC) -- no NPM_TOKEN secret needed at all.
+# Same pattern verified working end-to-end today for privaro-sdk-js, after
+# a real multi-round debugging session (dead classic token -> 2FA
+# restrictions -> registry-url silently forcing token auth -> Node version
+# too old for npm@latest -> Trusted Publisher never saved on npmjs.com).
+# Lessons applied proactively here so this doesn't need the same rounds:
+#   - No NODE_AUTH_TOKEN / registry-url anywhere in this file.
+#   - npm updated to a version that supports OIDC (>=11.5.1) before publishing.
+#   - package.json has a real `repository` field matching this repo exactly.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write   # to create the GitHub Release
+  id-token: write   # required for npm Trusted Publishing (OIDC)
+
+jobs:
+  test:
+    name: Lint & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm install
+      - run: npm run build
+      - run: npm run lint
+
+  publish:
+    name: Publish to npm
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: npm-publish
+      url: https://www.npmjs.com/package/n8n-nodes-privaro
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"   # npm@latest (12.x) requires Node >=22.22.2
+
+      - name: Update npm for OIDC support
+        run: npm install -g npm@latest
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate package.json version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${{ steps.version.outputs.VERSION }}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - run: npm install
+      - run: npm run build
+
+      # Trusted Publishing (OIDC) — no NPM_TOKEN needed, no --provenance
+      # flag needed either (generated automatically). Requires the Trusted
+      # Publisher to be configured on npmjs.com's package settings first:
+      # GitHub Actions, owner=Maperez1972, repo=n8n-nodes-privaro,
+      # workflow=publish.yml, environment=npm-publish.
+      - run: npm publish --access public
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "n8n-nodes-privaro ${{ github.ref_name }}"
+          generate_release_notes: true

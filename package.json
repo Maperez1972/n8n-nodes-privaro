@@ -1,0 +1,51 @@
+{
+  "name": "n8n-nodes-privaro",
+  "version": "0.1.0",
+  "description": "n8n community node for Privaro — the AI privacy governance layer. Detect, tokenize, safely relay chat completions, and detokenize PII before it reaches any LLM.",
+  "keywords": [
+    "n8n-community-node-package",
+    "privacy",
+    "pii",
+    "gdpr",
+    "tokenization",
+    "ai-governance"
+  ],
+  "license": "MIT",
+  "homepage": "https://privaro.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Maperez1972/n8n-nodes-privaro"
+  },
+  "author": {
+    "name": "iCommunity Labs",
+    "email": "contact@privaro.ai"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && cp nodes/Privaro/*.svg dist/nodes/Privaro/",
+    "dev": "tsc --watch",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/PrivaroApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Privaro/Privaro.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.0",
+    "n8n-workflow": "^1.0.0",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "name": "Protect Support Tickets with Privaro before GPT-4o-mini",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "support-ticket",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "id": "b1a1e0f0-0001-4a01-aaaa-000000000001",
+      "name": "Webhook (New Ticket)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generates one UUID per execution — used as conversation_id so the\n// tokens created below can be reversed later via Detokenize.\n// crypto.randomUUID() is a standard Node.js global, available in the\n// Code node's runtime.\nreturn $input.all().map(item => ({\n  json: { ...item.json, conversation_id: crypto.randomUUID() }\n}));"
+      },
+      "id": "b1a1e0f0-0002-4a01-aaaa-000000000002",
+      "name": "Generate Conversation ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "protect",
+        "pipelineId": "",
+        "prompt": "={{ $json.body.message }}",
+        "reversible": true,
+        "conversationId": "={{ $json.conversation_id }}",
+        "includeDetections": true
+      },
+      "id": "b1a1e0f0-0003-4a01-aaaa-000000000003",
+      "name": "Privaro — Protect",
+      "type": "n8n-nodes-privaro.privaro",
+      "typeVersion": 1,
+      "position": [660, 300],
+      "credentials": { "privaroApi": { "id": "1", "name": "Privaro API" } }
+    },
+    {
+      "parameters": {
+        "operation": "relay",
+        "pipelineId": "",
+        "messages": "={{ [{ role: 'system', content: 'You are a support triage assistant. Classify severity and suggest a short reply.' }, { role: 'user', content: $json.protected_prompt }] }}",
+        "model": "gpt-4o-mini",
+        "relayConversationId": "={{ $('Generate Conversation ID').item.json.conversation_id }}",
+        "detokeniseResponse": true
+      },
+      "id": "b1a1e0f0-0004-4a01-aaaa-000000000004",
+      "name": "Privaro — Chat Completion",
+      "type": "n8n-nodes-privaro.privaro",
+      "typeVersion": 1,
+      "position": [880, 300],
+      "credentials": { "privaroApi": { "id": "1", "name": "Privaro API" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { response: $json.response, risk_score: $json.risk_score, audit_log_id: $json.audit_log_id } }}"
+      },
+      "id": "b1a1e0f0-0005-4a01-aaaa-000000000005",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1100, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (New Ticket)": { "main": [[{ "node": "Generate Conversation ID", "type": "main", "index": 0 }]] },
+    "Generate Conversation ID": { "main": [[{ "node": "Privaro — Protect", "type": "main", "index": 0 }]] },
+    "Privaro — Protect": { "main": [[{ "node": "Privaro — Chat Completion", "type": "main", "index": 0 }]] },
+    "Privaro — Chat Completion": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Incoming support tickets are tokenized by Privaro (PII stripped and vaulted), classified by GPT-4o-mini via Privaro's protected relay, and returned to the caller. No raw customer data ever reaches OpenAI. NOTE: set the Pipeline ID field on both Privaro nodes to a real pipeline from your Privaro account before activating.",
+    "categories": ["AI", "Security", "Support"]
+  },
+  "tags": [
+    { "name": "Privaro" },
+    { "name": "AI Governance" },
+    { "name": "GDPR" }
+  ]
+}
