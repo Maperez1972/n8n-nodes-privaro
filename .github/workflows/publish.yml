@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: npm run build
       - run: npm run lint
 
@@ -67,7 +67,7 @@ jobs:
             exit 1
           fi
 
-      - run: npm install
+      - run: npm install --ignore-scripts
       - run: npm run build
 
       # Trusted Publishing (OIDC) — no NPM_TOKEN needed, no --provenance

@@ -49,11 +49,13 @@ npm install n8n-nodes-privaro
 ```bash
 git clone https://github.com/Maperez1972/n8n-nodes-privaro
 cd n8n-nodes-privaro
-npm install
+npm install --ignore-scripts
 npm run build
 npm link
 cd ~/.n8n && npm link n8n-nodes-privaro
 ```
+
+> `--ignore-scripts` is not optional on most machines: `n8n-workflow` pulls in `isolated-vm` as a transitive dependency, a native module that needs to compile C++ (Visual Studio Build Tools on Windows, Xcode Command Line Tools on macOS). We never actually run anything that needs `isolated-vm`'s native functionality here — only its type declarations, for `tsc` — so skipping its native build step entirely is both safe and much faster.
 
 ---
 
